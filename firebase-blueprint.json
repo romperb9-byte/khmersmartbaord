@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile and workspace preferences.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address",
+          "maxLength": 160
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "enum": ["km", "en"],
+          "description": "UI language preference"
+        },
+        "preferredTheme": {
+          "type": "string",
+          "enum": ["light", "dark"],
+          "description": "UI color theme preference"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["uid", "displayName", "preferredLanguage", "preferredTheme", "createdAt", "updatedAt"]
+    },
+    "WhiteboardProject": {
+      "title": "WhiteboardProject",
+      "description": "A saved Smart AI Whiteboard project owned by a user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Owner Firebase UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Project title",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "pageCount": {
+          "type": "integer",
+          "description": "Number of pages in this whiteboard"
+        },
+        "backgroundStyle": {
+          "type": "string",
+          "enum": ["plain", "dots", "grid", "ruled"],
+          "description": "Canvas background pattern"
+        },
+        "thumbnailDataUrl": {
+          "type": "string",
+          "description": "Small compressed preview thumbnail data URL",
+          "maxLength": 120000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last save timestamp"
+        }
+      },
+      "required": ["ownerId", "title", "pageCount", "backgroundStyle", "createdAt", "updatedAt"]
+    },
+    "WhiteboardPage": {
+      "title": "WhiteboardPage",
+      "description": "A single page of vector items belonging to a WhiteboardProject.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Owner Firebase UID matching parent board",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "boardId": {
+          "type": "string",
+          "description": "Parent board document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "pageIndex": {
+          "type": "integer",
+          "description": "Zero-based page index"
+        },
+        "title": {
+          "type": "string",
+          "description": "Page title",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "items": {
+          "type": "array",
+          "description": "Native list of canvas vector items"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["ownerId", "boardId", "pageIndex", "title", "items", "updatedAt"]
+    },
+    "ProjectHistoryEntry": {
+      "title": "ProjectHistoryEntry",
+      "description": "A versioned snapshot in a whiteboard's project history.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Owner Firebase UID matching parent board",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "boardId": {
+          "type": "string",
+          "description": "Parent board document ID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Short label for this revision",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "pageCount": {
+          "type": "integer",
+          "description": "Page count at snapshot time"
+        },
+        "itemCount": {
+          "type": "integer",
+          "description": "Total canvas items at snapshot time"
+        },
+        "snapshotPages": {
+          "type": "array",
+          "description": "Snapshot list of page objects"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Snapshot timestamp"
+        }
+      },
+      "required": ["ownerId", "boardId", "summary", "pageCount", "itemCount", "snapshotPages", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile isolated to the owning user."
+    },
+    "/boards/{boardId}": {
+      "schema": { "$ref": "#/entities/WhiteboardProject" },
+      "description": "Saved Smart AI Whiteboard project metadata."
+    },
+    "/boards/{boardId}/pages/{pageId}": {
+      "schema": { "$ref": "#/entities/WhiteboardPage" },
+      "description": "Pages inside a whiteboard project."
+    },
+    "/boards/{boardId}/history/{historyId}": {
+      "schema": { "$ref": "#/entities/ProjectHistoryEntry" },
+      "description": "Version history snapshots for a whiteboard project."
+    }
+  }
+}
