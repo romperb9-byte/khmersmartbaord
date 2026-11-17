@@ -7,13 +7,32 @@ import type {
 } from '../types/whiteboard';
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const apiBase = ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_API_URL || '').replace(/\/$/, '');
+  const targetUrl = apiBase ? `${apiBase}${url.startsWith('/') ? url : `/${url}`}` : url;
+
+  let res: globalThis.Response;
+  try {
+    res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      throw new Error(
+        'មុខងារ AI ត្រូវការ Backend Server ដំណើរការ។ ក្ដារខៀន ស្ទូឌីយោ 3D និងឧបករណ៍គូរដំណើរការធម្មតា។ (AI features require an active backend server).',
+      );
+    }
+    throw new Error('Could not connect to AI backend server.');
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 404 && typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+      throw new Error(
+        'មុខងារ AI ត្រូវការ Backend Server ដំណើរការ។ ក្ដារខៀន ស្ទូឌីយោ 3D និងឧបករណ៍គូរដំណើរការធម្មតា។ (AI features require an active backend server).',
+      );
+    }
     throw new Error(data.error || `Request failed with status ${res.status}`);
   }
   return data as T;
